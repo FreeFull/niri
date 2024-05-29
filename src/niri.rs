@@ -66,6 +66,7 @@ use smithay::wayland::compositor::{
 };
 use smithay::wayland::cursor_shape::CursorShapeManagerState;
 use smithay::wayland::dmabuf::DmabufState;
+use smithay::wayland::fractional_scale::FractionalScaleManagerState;
 use smithay::wayland::idle_inhibit::IdleInhibitManagerState;
 use smithay::wayland::idle_notify::IdleNotifierState;
 use smithay::wayland::input_method::{InputMethodManagerState, InputMethodSeat};
@@ -199,6 +200,7 @@ pub struct Niri {
     pub shm_state: ShmState,
     pub output_manager_state: OutputManagerState,
     pub dmabuf_state: DmabufState,
+    pub fractional_scale_manager_state: FractionalScaleManagerState,
     pub seat_state: SeatState<State>,
     pub tablet_state: TabletManagerState,
     pub text_input_state: TextInputManagerState,
@@ -1049,7 +1051,7 @@ impl State {
                 let resolution = output.current_mode().unwrap().size;
                 guess_monitor_scale(size_mm, resolution)
             });
-            let scale = scale.clamp(1., 10.).ceil() as i32;
+            let scale = scale.clamp(1., 10.);
 
             let mut transform = config
                 .map(|c| ipc_transform_to_smithay(c.transform))
@@ -1059,13 +1061,13 @@ impl State {
                 transform = Transform::Flipped180;
             }
 
-            if output.current_scale().integer_scale() != scale
+            if output.current_scale().fractional_scale() != scale
                 || output.current_transform() != transform
             {
                 output.change_current_state(
                     None,
                     Some(transform),
-                    Some(output::Scale::Integer(scale)),
+                    Some(output::Scale::Fractional(scale)),
                     None,
                 );
                 self.niri.ipc_outputs_changed = true;
@@ -1323,6 +1325,8 @@ impl Niri {
         let output_manager_state =
             OutputManagerState::new_with_xdg_output::<State>(&display_handle);
         let dmabuf_state = DmabufState::new();
+        let fractional_scale_manager_state =
+            FractionalScaleManagerState::new::<State>(&display_handle);
         let mut seat_state = SeatState::new();
         let tablet_state = TabletManagerState::new::<State>(&display_handle);
         let pointer_gestures_state = PointerGesturesState::new::<State>(&display_handle);
@@ -1510,6 +1514,7 @@ impl Niri {
             shm_state,
             output_manager_state,
             dmabuf_state,
+            fractional_scale_manager_state,
             seat_state,
             tablet_state,
             pointer_gestures_state,
@@ -1727,7 +1732,7 @@ impl Niri {
             let resolution = output.current_mode().unwrap().size;
             guess_monitor_scale(size_mm, resolution)
         });
-        let scale = scale.clamp(1., 10.).ceil() as i32;
+        let scale = scale.clamp(1., 10.);
         let mut transform = c
             .map(|c| ipc_transform_to_smithay(c.transform))
             .unwrap_or(Transform::Normal);
@@ -1741,7 +1746,7 @@ impl Niri {
         output.change_current_state(
             None,
             Some(transform),
-            Some(output::Scale::Integer(scale)),
+            Some(output::Scale::Fractional(scale)),
             None,
         );
 

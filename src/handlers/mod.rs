@@ -27,6 +27,7 @@ use smithay::wayland::dmabuf::{DmabufGlobal, DmabufHandler, DmabufState, ImportN
 use smithay::wayland::drm_lease::{
     DrmLease, DrmLeaseBuilder, DrmLeaseHandler, DrmLeaseRequest, DrmLeaseState, LeaseRejected,
 };
+use smithay::wayland::fractional_scale::FractionalScaleHandler;
 use smithay::wayland::idle_inhibit::IdleInhibitHandler;
 use smithay::wayland::idle_notify::{IdleNotifierHandler, IdleNotifierState};
 use smithay::wayland::input_method::{InputMethodHandler, PopupSurface};
@@ -50,11 +51,12 @@ use smithay::wayland::session_lock::{
 use smithay::wayland::tablet_manager::TabletSeatHandler;
 use smithay::{
     delegate_cursor_shape, delegate_data_control, delegate_data_device, delegate_dmabuf,
-    delegate_drm_lease, delegate_idle_inhibit, delegate_idle_notify, delegate_input_method_manager,
-    delegate_output, delegate_pointer_constraints, delegate_pointer_gestures,
-    delegate_presentation, delegate_primary_selection, delegate_relative_pointer, delegate_seat,
-    delegate_security_context, delegate_session_lock, delegate_tablet_manager,
-    delegate_text_input_manager, delegate_viewporter, delegate_virtual_keyboard_manager,
+    delegate_drm_lease, delegate_fractional_scale, delegate_idle_inhibit, delegate_idle_notify,
+    delegate_input_method_manager, delegate_output, delegate_pointer_constraints,
+    delegate_pointer_gestures, delegate_presentation, delegate_primary_selection,
+    delegate_relative_pointer, delegate_seat, delegate_security_context, delegate_session_lock,
+    delegate_tablet_manager, delegate_text_input_manager, delegate_viewporter,
+    delegate_virtual_keyboard_manager,
 };
 
 use crate::niri::{ClientState, State};
@@ -498,3 +500,10 @@ impl GammaControlHandler for State {
     }
 }
 delegate_gamma_control!(State);
+
+impl FractionalScaleHandler for State {
+    fn new_fractional_scale(&mut self, _surface: WlSurface) {
+        // TODO: send current scale depending on surface type, or just make Smithay do it.
+    }
+}
+delegate_fractional_scale!(State);

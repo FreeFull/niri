@@ -91,13 +91,15 @@ pub fn center_f64(rect: Rectangle<f64, Logical>) -> Point<f64, Logical> {
 }
 
 pub fn output_size(output: &Output) -> Size<i32, Logical> {
-    let output_scale = output.current_scale().integer_scale();
+    let output_scale = output.current_scale().fractional_scale();
     let output_transform = output.current_transform();
     let output_mode = output.current_mode().unwrap();
 
-    output_transform
-        .transform_size(output_mode.size)
-        .to_logical(output_scale)
+    // Like in LayerMap::arrange().
+    //
+    // FIXME: return fractional logical size.
+    let logical_size = output_mode.size.to_f64().to_logical(output_scale);
+    output_transform.transform_size(logical_size.to_i32_round())
 }
 
 pub fn logical_output(output: &Output) -> niri_ipc::LogicalOutput {
